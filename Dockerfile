@@ -10,6 +10,7 @@ RUN apt-get install -y vim less
 COPY kong.conf /etc/kong/
 COPY custom_nginx.template /etc/kong
 COPY index.html /var/www/
+COPY something.html /var/www/
 RUN ln -s /usr/local/share/lua/5.1/kong/templates /tmpl
 RUN ln -s /usr/local/kong/ /kong
 CMD ["bash", "-c", "kong migrations bootstrap -c /etc/kong/kong.conf && kong start -c /etc/kong/kong.conf --nginx-conf /etc/kong/custom_nginx.template && tail -f /dev/null"]
