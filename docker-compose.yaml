@@ -1,0 +1,48 @@
+version: '2.1'
+
+networks:
+  testnet:
+services:
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 12345:8080
+
+  kong:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    hostname: "kong"
+    user: "${KONG_USER:-root}"
+    depends_on:
+      kongdb:
+        condition: service_healthy
+    networks:
+      - testnet
+    ports:
+      - "8000:8000/tcp"
+      - "8001:8001/tcp"
+      - "8443:8443/tcp"
+      - "8444:8444/tcp"
+    restart: on-failure
+
+  kongdb:
+    image: postgres:9.5
+    hostname: kongdb
+    environment:
+      POSTGRES_DB: ${KONG_PG_DATABASE:-kong}
+      POSTGRES_PASSWORD: ${KONG_PG_PASSWORD:-kong}
+      POSTGRES_USER: ${KONG_PG_USER:-kong}
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "${KONG_PG_USER:-kong}"]
+      interval: 30s
+      timeout: 30s
+      retries: 3
+    ports:
+      - "5432:5432"
+    restart: on-failure
+    stdin_open: true
+    tty: true
+    networks:
+      - testnet
