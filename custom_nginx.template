@@ -65,6 +65,17 @@ http {
         Kong.init_worker()
     }
 
+> if (role == "traditional" or role == "data_plane") and #proxy_listeners > 0 then
+    upstream kong_upstream {
+        server 0.0.0.1;
+        balancer_by_lua_block {
+            Kong.balancer()
+        }
+        # injected nginx_upstream_* directives
+> for _, el in ipairs(nginx_upstream_directives) do
+        $(el.name) $(el.value);
+> end
+    }
 
     server {
         server_name kong;
@@ -110,6 +121,7 @@ http {
 > end
             proxy_pass            $upstream_scheme://kong_upstream$upstream_uri;
         }
-
     }
+> end -- (role == "traditional" or role == "data_plane") and #proxy_listeners > 0
+
 }
